@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
 import { PenSquare, Loader2 } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +28,6 @@ export default function LoginPage() {
 
     try {
       const redirectUrl = searchParams.get('redirect') || '/dashboard';
-      
       const { data, error } = await authClient.signIn.email({
         email: formData.email,
         password: formData.password,
@@ -105,7 +104,7 @@ export default function LoginPage() {
                 <Checkbox
                   id="remember"
                   checked={formData.rememberMe}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     setFormData({ ...formData, rememberMe: checked === true })
                   }
                   disabled={isLoading}
@@ -147,5 +146,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
   );
 }
