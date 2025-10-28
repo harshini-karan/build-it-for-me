@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,9 +12,20 @@ import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
 import { PenSquare, Loader2 } from 'lucide-react';
 
-function LoginContent() {
+export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+
+  // NEW: local values derived from the URL (no Next hook)
+  const [redirectUrl, setRedirectUrl] = useState('/dashboard');
+  const [registered, setRegistered] = useState(false);
+
+  useEffect(() => {
+    // Runs only in the browser
+    const params = new URLSearchParams(window.location.search);
+    setRedirectUrl(params.get('redirect') || '/dashboard');
+    setRegistered(params.get('registered') === 'true');
+  }, []);
+
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -27,7 +38,6 @@ function LoginContent() {
     setIsLoading(true);
 
     try {
-      const redirectUrl = searchParams.get('redirect') || '/dashboard';
       const { data, error } = await authClient.signIn.email({
         email: formData.email,
         password: formData.password,
@@ -60,7 +70,7 @@ function LoginContent() {
           <p className="text-muted-foreground mt-2">Sign in to your account to continue</p>
         </div>
 
-        {searchParams.get('registered') === 'true' && (
+        {registered && (
           <div className="mb-4 p-4 rounded-lg bg-primary/10 border border-primary/20 text-sm">
             Account created successfully! Please sign in with your credentials.
           </div>
@@ -131,7 +141,7 @@ function LoginContent() {
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-center text-muted-foreground">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link href="/register" className="text-primary hover:underline font-medium">
                 Create one now
               </Link>
@@ -146,13 +156,5 @@ function LoginContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={null}>
-      <LoginContent />
-    </Suspense>
   );
 }
